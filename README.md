@@ -1,7 +1,7 @@
 
 ## findbillion  <br>
 把目標價估算軟體 findbillion 優化演算法來增加準確度, 並且開源<br>
-桌機版可在此處下載 https://www.findbillion.com <br>
+桌機版可在此處下載 http://www.findbillion.com <br>
  <br>
  
 ## 程式碼測試採用平台如下: <br>
