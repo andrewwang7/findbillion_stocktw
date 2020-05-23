@@ -147,7 +147,7 @@ def main():
             est_cash_dividend_result = pool.starmap(processing_est_cash_dividend_average, zip(stock_list, repeat(year_stat), repeat(year_est)))
 
         # eps_true, eps_pred, err_percentage
-        dict_to_csv(est_cash_dividend_result, 'est_cash_dividend_average'+format(year_est)+'.csv', save_path=save_path)
+        dict_to_csv(est_cash_dividend_result, 'est_cash_dividend_average_'+format(year_est)+'.csv', save_path=save_path)
         stat_dict(est_cash_dividend_result, 'est_cash_dividend_average_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
         # --------------------------------------------------
         # method 2
