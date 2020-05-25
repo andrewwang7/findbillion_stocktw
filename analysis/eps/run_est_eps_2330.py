@@ -19,23 +19,25 @@ debug = 0
 
 
 def main():
-    year = 2019
+    year_list = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
     quarter = 4
     stockid = 2330
 
+    for year in year_list:
+        print('----------------------------')
+        print(year)
+        findbillion_database = class_findbillion_database(dataset_path)
+        financial_ratio = class_financial_ratio(findbillion_database)
+        est_eps = class_est_eps(findbillion_database)
+        eps_true = financial_ratio.get_eps_last_4q(stockid, year, quarter)
 
-    findbillion_database = class_findbillion_database(dataset_path)
-    financial_ratio = class_financial_ratio(findbillion_database)
-    est_eps = class_est_eps(findbillion_database)
-    eps_true = financial_ratio.get_eps_last_4q(stockid, year, quarter)
+        eps_pred = est_eps.est_last_4q_eps_by_netincome_ratio(stockid, year, quarter)
 
-    eps_pred = est_eps.est_last_4q_eps_by_netincome_ratio(stockid, year, quarter)
+        err_percentage = (eps_pred - eps_true)/eps_true * 100
 
-    err_percentage = (eps_pred - eps_true)/eps_true * 100
-
-    print("eps (true):       {:2.2f}".format(eps_true))
-    print("eps (predict):    {:2.2f}".format(eps_pred))
-    print("error of predict: {:2.2f}%".format(err_percentage))
+        print("eps (true):       {:2.2f}".format(eps_true))
+        print("eps (predict):    {:2.2f}".format(eps_pred))
+        print("error of predict: {:2.2f}%".format(err_percentage))
 
 
 if __name__ == '__main__':
