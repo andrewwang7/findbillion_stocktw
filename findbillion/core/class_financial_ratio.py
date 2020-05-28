@@ -141,8 +141,54 @@ class class_financial_ratio:
         return roe_avg
 
 
+    def get_free_cash_flow(self, stockid, year, quarter, acc_year):
+        check_year = year
+        check_quarter = quarter
+        cash_OperatingActivities = 0
+        cash_InvestingActivities = 0
+        for idx in range(acc_year * 4):
+            cash_OperatingActivities__ = self.fs_cashflowstatement.get_OperatingActivities(stockid, check_year, check_quarter)
+            cash_InvestingActivities__ = self.fs_cashflowstatement.get_InvestingActivities(stockid, check_year, check_quarter)
 
+            if cash_OperatingActivities__ is not None or cash_InvestingActivities__ is not None:
+                cash_OperatingActivities += cash_OperatingActivities__
+                cash_InvestingActivities += cash_InvestingActivities__
 
+            # next quarter
+            check_quarter -= 1
+            if (check_quarter <= 0):
+                check_year -= 1
+                check_quarter = 4
+
+        free_cash_flow = cash_OperatingActivities + cash_InvestingActivities
+
+        return free_cash_flow
+
+    def get_opetating_activities_ratio(self, stockid, year, quarter, acc_year):
+        check_year = year
+        check_quarter = quarter
+        cash_OperatingActivities = 0
+        cash_NetIncomes = 0
+        for idx in range(acc_year * 4):
+            cash_OperatingActivities__ = self.fs_cashflowstatement.get_OperatingActivities(stockid, check_year, check_quarter)
+            cash_NetIncomes__ = self.fs_cashflowstatement.get_NetIncomes(stockid, check_year, check_quarter)
+
+            if cash_OperatingActivities__ is not None or cash_NetIncomes__ is not None:
+                cash_OperatingActivities += cash_OperatingActivities__
+                cash_NetIncomes += cash_NetIncomes__
+
+            # next quarter
+            check_quarter -= 1
+            if (check_quarter <= 0):
+                check_year -= 1
+                check_quarter = 4
+
+        if cash_NetIncomes>0:
+            opetating_activities_ratio = cash_OperatingActivities/cash_NetIncomes
+        else:
+            opetating_activities_ratio = None
+
+        return opetating_activities_ratio
 
 
 

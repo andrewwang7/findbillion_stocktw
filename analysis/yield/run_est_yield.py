@@ -23,7 +23,7 @@ num_cpu = 4
 debug = 0
 
 year_stat_list = [2012, 2013, 2014, 2015, 2016, 2017]  # 2012~2017
-year_est_list = [2013, 2014, 2015, 2016, 2017, 2018]  # 2013~2018
+year_est_list =  [2013, 2014, 2015, 2016, 2017, 2018]  # 2013~2018
 
 findbillion_database = class_findbillion_database(dataset_path)
 
@@ -37,6 +37,29 @@ def processing_roe_15pa(stockid, year_stat):
         return stockid
     else:
         return None
+
+
+def processing_free_cash_positive(stockid, year_stat):
+    print(format(stockid) + '...')
+
+    financial_ratio = class_financial_ratio(findbillion_database)
+    free_cash_flow = financial_ratio.get_free_cash_flow(stockid, year_stat, 4, 2)
+    if free_cash_flow is not None and free_cash_flow > 0:
+        return stockid
+    else:
+        return None
+
+
+def processing_opetating_activities_ratio(stockid, year_stat):
+    print(format(stockid) + '...')
+
+    financial_ratio = class_financial_ratio(findbillion_database)
+    opetating_activities_ratio = financial_ratio.get_opetating_activities_ratio(stockid, year_stat, 4, 2)
+    if opetating_activities_ratio is not None and opetating_activities_ratio > 0.5:
+        return stockid
+    else:
+        return None
+
 
 
 def processing_est_cash_dividend_average(stockid, year_stat, year_est):
@@ -168,6 +191,60 @@ def main():
 
         dict_to_csv(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_by_netincome_ratio_'+format(year_est)+'.csv', save_path=save_path)
         stat_dict(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_by_netincome_ratio_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
+
+
+        # --------------------------------------------------
+        # method 4
+        print('method 4')
+        print('search free cash>0 ...')
+        with Pool(num_cpu) as pool:
+            stock_free_cash_list = pool.starmap(processing_free_cash_positive, zip(stock_list, repeat(year_stat) ))
+
+        '''
+        stock_free_cash_list = []
+        for i_stock in stock_list:
+            stock_free_cash_list.append(processing_free_cash_positive(i_stock, year_stat))
+        '''
+        '''
+        stock_list = []
+        for i_stock in stock_free_cash_list:
+            if i_stock is not None:
+                stock_list.append(i_stock)
+        stock_free_cash_list = stock_list
+        
+        with Pool(num_cpu) as pool:
+            est_cash_dividend_by_netincome_ratio = pool.starmap(processing_est_cash_dividend_by_netincome_ratio, zip(stock_free_cash_list, repeat(year_stat), repeat(year_est)))
+
+        dict_to_csv(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_by_netincome_ratio_free_cashflow_'+format(year_est)+'.csv', save_path=save_path)
+        stat_dict(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_by_netincome_ratio_free_cashflow_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
+        '''
+
+        # --------------------------------------------------
+        # method 5
+        print('method 5')
+        print('search opetating activities ratio >0.5 ...')
+        #with Pool(num_cpu) as pool:
+        #    stock_free_cash_list = pool.starmap(processing_opetating_activities_ratio, zip(stock_list, repeat(year_stat) ))
+
+        #'''
+        stock_opetating_activities_ratio_list = []
+        for i_stock in stock_list:
+            stock_opetating_activities_ratio_list.append(processing_opetating_activities_ratio(i_stock, year_stat))
+        #'''
+
+        stock_list = []
+        for i_stock in stock_opetating_activities_ratio_list:
+            if i_stock is not None:
+                stock_list.append(i_stock)
+        stock_opetating_activities_ratio_list = stock_list
+
+        with Pool(num_cpu) as pool:
+            est_cash_dividend_by_netincome_ratio = pool.starmap(processing_est_cash_dividend_by_netincome_ratio, zip(stock_opetating_activities_ratio_list, repeat(year_stat), repeat(year_est)))
+
+        dict_to_csv(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_opetating_activities_ratio_by_netincome_ratio_free_cashflow_'+format(year_est)+'.csv', save_path=save_path)
+        stat_dict(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_opetating_activities_ratio_by_netincome_ratio_free_cashflow_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
+
+
 
 
 
