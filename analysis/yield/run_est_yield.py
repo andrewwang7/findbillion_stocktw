@@ -205,7 +205,7 @@ def main():
         for i_stock in stock_list:
             stock_free_cash_list.append(processing_free_cash_positive(i_stock, year_stat))
         '''
-        '''
+
         stock_list = []
         for i_stock in stock_free_cash_list:
             if i_stock is not None:
@@ -217,7 +217,7 @@ def main():
 
         dict_to_csv(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_by_netincome_ratio_free_cashflow_'+format(year_est)+'.csv', save_path=save_path)
         stat_dict(est_cash_dividend_by_netincome_ratio, 'est_cash_dividend_by_netincome_ratio_free_cashflow_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
-        '''
+
 
         # --------------------------------------------------
         # method 5
