@@ -63,7 +63,7 @@ def processing_return_for_average_5y_cash_dividend(stockid, year_stat, year_est,
     est_dividend_cash = est_yield.get_average_5y_cash_dividend(stockid, year_stat)
 
     monthprice = class_monthprice(findbillion_database)
-    price_buyin = monthprice.get_PriceHigh(stockid, year_est, 1)
+    price_buyin = monthprice.get_PriceHigh(stockid, year_est+1, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues
 
     if est_dividend_cash is not None and price_buyin is not None:
         est_dividend_cash_yield = est_dividend_cash/price_buyin
@@ -72,7 +72,7 @@ def processing_return_for_average_5y_cash_dividend(stockid, year_stat, year_est,
 
     if price_buyin is not None and est_dividend_cash_yield is not None and dividend_cash_true is not None \
             and est_dividend_cash_yield>yield_buyin:
-        price_buyin_hold_1y = monthprice.get_PriceHigh(stockid, year_est+hold_year, 1)
+        price_buyin_hold_1y = monthprice.get_PriceHigh(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
 
         if price_buyin_hold_1y is not None:
             return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash_true)/price_buyin
@@ -105,14 +105,14 @@ def processing_return_for_est_cash_dividend_by_netincome_ratio(stockid, year_sta
     est_dividend_cash = est_yield.est_cash_dividend_by_linear_regression_5y(stockid, year_stat, eps_est_last_4q)
 
     monthprice = class_monthprice(findbillion_database)
-    price_buyin = monthprice.get_PriceHigh(stockid, year_est, 1)
+    price_buyin = monthprice.get_PriceHigh(stockid, year_est+1, 1)  # +1, estimate 2018 Q4 EPS, 2019/1 get revenues,
     if est_dividend_cash is not None and price_buyin is not None:
         est_dividend_cash_yield = est_dividend_cash/price_buyin
     else:
         est_dividend_cash_yield = None
 
     if price_buyin is not None and est_dividend_cash_yield is not None and est_dividend_cash_yield>yield_buyin:
-        price_buyin_hold_1y = monthprice.get_PriceHigh(stockid, year_est+hold_year, 1)
+        price_buyin_hold_1y = monthprice.get_PriceHigh(stockid, year_est+1+hold_year, 1)
         if price_buyin_hold_1y is not None:
             return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash_true)/price_buyin
         else:
