@@ -23,7 +23,7 @@ from findbillion.models.class_monthprice import class_monthprice
 dataset_path = r'../../data'
 save_path = r'../../~result'
 num_cpu = 4
-debug =0
+debug = 0
 
 year_stat_list = [2012, 2013, 2014, 2015, 2016, 2017]  # 2012~2017
 year_est_list =  [2013, 2014, 2015, 2016, 2017, 2018]  # 2013~2018
@@ -245,7 +245,8 @@ def main():
         # --------------------------------------------------
         # method 4
         # yield_buyin > 0.05 and hold_year = 1
-        yield_buyin = 0.05
+        yield_buyin = 0.0625
+        yield_buyin_target = 0.05
         hold_year = 1
         print('--------------------------------')
         print('method 4')
@@ -274,7 +275,7 @@ def main():
         dict_to_csv_yeild_return(return_1y_for_est_cash_dividend_by_netincome_ratio_result, 'return_1y_for_est_cash_dividend_by_netincome_ratio_' + format(year_est) + '.csv',
                     save_path=save_path)
         stat_dict_return(return_1y_for_est_cash_dividend_by_netincome_ratio_result, 'return_1y_for_est_cash_dividend_by_netincome_ratio_' + format(year_est),
-                  low_bound_pa=yield_buyin, save_path=save_path)
+                  low_bound_pa=yield_buyin_target, save_path=save_path)
 
 
 
