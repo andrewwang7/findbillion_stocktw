@@ -57,3 +57,22 @@ def stat_dict(dict_result, filename_save, up_bound_pa, low_bound_pa, save_path='
     plt.xlabel('est. error (%)')
     plt.savefig(os.path.join(save_path, filename_save+'.png'))
     plt.close()
+
+
+
+def cal_retrun(stockid, price_buy, price_sell, year_start, year_hold, fs_dividendpolicy):
+    dividend_cash = fs_dividendpolicy.get_Dividend_Cash(stockid, year_start)
+    dividend_stoch = 1 + fs_dividendpolicy.get_Dividend_Stock(stockid, year_start) / 10
+    for idx in range(1, year_hold):
+        dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_start + idx)
+        dividend_stoch_this = fs_dividendpolicy.get_Dividend_Stock(stockid, year_start + idx)
+
+        dividend_cash += dividend_cash_this
+        dividend_stoch *= (1 + dividend_stoch_this / 10)
+
+    if price_buy is not None and price_sell is not None:
+        return_buyin = (price_sell - price_buy + dividend_cash) / price_buy * dividend_stoch
+    else:
+        return_buyin = None
+
+    return return_buyin

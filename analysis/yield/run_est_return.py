@@ -10,7 +10,7 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 sys.path.append('../..')
-from analysis.analysis_utility import dict_to_csv, stat_dict
+from analysis.analysis_utility import dict_to_csv, stat_dict, cal_retrun
 from findbillion.core.class_findbillion_database import class_findbillion_database
 from findbillion.core.class_financial_ratio import class_financial_ratio
 from findbillion.core.class_est_eps import class_est_eps
@@ -71,25 +71,11 @@ def processing_return_for_in_list(stockid, year_stat, year_est, yield_buyin, hol
     dividend_cash_true = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est)
 
     if price_buyin is not None:
-        if dividend_cash_true is None:
-            dividend_cash_true = 0
-
-        price_buyin_hold_1y = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
-
-        dividend_cash = dividend_cash_true
-        for idx in range(1, hold_year):
-            dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est+idx)
-            if dividend_cash_this is None:
-                dividend_cash_this = 0
-            dividend_cash += dividend_cash_this
-
-        if price_buyin_hold_1y is not None:
-            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash)/price_buyin
-        else:
-            return_buyin = None
+        price_buyin_hold = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
+        return_buyin = cal_retrun(stockid, price_buyin, price_buyin_hold, year_est, hold_year, fs_dividendpolicy)
     else:
         price_buyin = None
-        price_buyin_hold_1y = None
+        price_buyin_hold = None
         return_buyin = None
 
     est_dividend_cash = None
@@ -99,7 +85,7 @@ def processing_return_for_in_list(stockid, year_stat, year_est, yield_buyin, hol
            {stockid: est_dividend_cash}, \
            {stockid: est_dividend_cash_yield}, \
            {stockid: price_buyin}, \
-           {stockid: price_buyin_hold_1y}, \
+           {stockid: price_buyin_hold}, \
            {stockid: return_buyin}
 
 
@@ -121,32 +107,18 @@ def processing_return_for_average_5y_cash_dividend(stockid, year_stat, year_est,
         est_dividend_cash_yield = None
 
     if price_buyin is not None and est_dividend_cash_yield is not None and est_dividend_cash_yield>yield_buyin:
-        price_buyin_hold_1y = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
-
-        if dividend_cash_true is None:
-            dividend_cash_true = 0
-
-        dividend_cash = dividend_cash_true
-        for idx in range(1, hold_year):
-            dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est+idx)
-            if dividend_cash_this is None:
-                dividend_cash_this = 0
-            dividend_cash += dividend_cash_this
-
-        if price_buyin_hold_1y is not None:
-            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash)/price_buyin
-        else:
-            return_buyin = None
+        price_buyin_hold = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
+        return_buyin = cal_retrun(stockid, price_buyin, price_buyin_hold, year_est, hold_year, fs_dividendpolicy)
     else:
         price_buyin = None
-        price_buyin_hold_1y = None
+        price_buyin_hold = None
         return_buyin = None
 
     return {stockid: dividend_cash_true}, \
            {stockid: est_dividend_cash}, \
            {stockid: est_dividend_cash_yield}, \
            {stockid: price_buyin}, \
-           {stockid: price_buyin_hold_1y}, \
+           {stockid: price_buyin_hold}, \
            {stockid: return_buyin}
 
 
@@ -171,32 +143,18 @@ def processing_return_for_est_cash_dividend_by_netincome_ratio(stockid, year_sta
         est_dividend_cash_yield = None
 
     if price_buyin is not None and est_dividend_cash_yield is not None and est_dividend_cash_yield>yield_buyin:
-        price_buyin_hold_1y = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)
-
-        if dividend_cash_true is None:
-            dividend_cash_true = 0
-
-        dividend_cash = dividend_cash_true
-        for idx in range(1, hold_year):
-            dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est+idx)
-            if dividend_cash_this is None:
-                dividend_cash_this = 0
-            dividend_cash += dividend_cash_this
-
-        if price_buyin_hold_1y is not None:
-            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash)/price_buyin
-        else:
-            return_buyin = None
+        price_buyin_hold = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)
+        return_buyin = cal_retrun(stockid, price_buyin, price_buyin_hold, year_est, hold_year, fs_dividendpolicy)
     else:
         price_buyin = None
-        price_buyin_hold_1y = None
+        price_buyin_hold = None
         return_buyin = None
 
     return {stockid: dividend_cash_true}, \
            {stockid: est_dividend_cash}, \
            {stockid: est_dividend_cash_yield}, \
            {stockid: price_buyin}, \
-           {stockid: price_buyin_hold_1y}, \
+           {stockid: price_buyin_hold}, \
            {stockid: return_buyin}
 
 
@@ -207,13 +165,13 @@ def dict_to_csv_yeild_return(dict_result, filename_csv, save_path=''):
     with open(os.path.join(save_path, filename_csv), 'w') as f:
         f.write('stock, dividend_cash_true, dividend_cash_pred, yield_pred, price_buy, price_hold, return \n')
         for dict_result_ in dict_result:
-            dividend_cash_true, est_dividend_cash, est_dividend_cash_yield, price_buyin, price_buyin_hold_1y, return_buyin = dict_result_
+            dividend_cash_true, est_dividend_cash, est_dividend_cash_yield, price_buyin, price_buyin_hold, return_buyin = dict_result_
             key = list(dividend_cash_true.keys())[0]
             if price_buyin[key] is not None and \
-                price_buyin_hold_1y[key] is not None and \
+                price_buyin_hold[key] is not None and \
                 return_buyin[key] is not None:
                 f.write("%s, %s, %s, %s, %s, %s, %s\n"%(key, dividend_cash_true[key], est_dividend_cash[key], est_dividend_cash_yield[key],
-                                                             price_buyin[key], price_buyin_hold_1y[key], return_buyin[key],))
+                                                             price_buyin[key], price_buyin_hold[key], return_buyin[key],))
 
                 #dividend_cash_true[key] is not None and \
                 #est_dividend_cash[key] is not None and \
@@ -297,7 +255,6 @@ def main():
         with Pool(num_cpu) as pool:
             return_for_roe_15 = pool.starmap(processing_return_for_in_list,
                                                 zip(stock_list, repeat(year_stat), repeat(year_est), repeat(yield_buyin), repeat(hold_year)))
-
 
         dict_to_csv_yeild_return(return_for_roe_15, 'return_for_roe_15_' + format(year_est) + '.csv',
                     save_path=save_path)
