@@ -25,12 +25,20 @@ save_path = r'../../~result'
 num_cpu = 4
 debug = 0
 
-year_stat_list = [2012, 2013, 2014, 2015, 2016, 2017]  # 2012~2017
-year_est_list =  [2013, 2014, 2015, 2016, 2017, 2018]  # 2013~2018
+#year_stat_list = [2012, 2013, 2014, 2015, 2016, 2017]  # 2012~2017
+#year_est_list =  [2013, 2014, 2015, 2016, 2017, 2018]  # 2013~2018
+#hold_year = 1
 
+year_stat_list = [2012, 2013, 2014, 2015]  # 2012~2017
+year_est_list =  [2013, 2014, 2015, 2016]  # 2013~2018
+hold_year = 3
+num_stock_sel = 10
 
 findbillion_database = class_findbillion_database(dataset_path)
+yield_buyin = 0.0625
+yield_buyin_target = 0.05
 
+np.random.seed(7)
 
 def processing_roe_15pa(stockid, year_stat):
     print(format(stockid) + '...')
@@ -53,6 +61,48 @@ def processing_free_cash_positive(stockid, year_stat):
         return None
 
 
+def processing_return_for_in_list(stockid, year_stat, year_est, yield_buyin, hold_year):
+    print(format(stockid) + '...')
+
+    monthprice = class_monthprice(findbillion_database)
+    price_buyin = monthprice.get_PriceHigh(stockid, year_est+1, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues
+
+    fs_dividendpolicy = class_fs_dividendpolicy(findbillion_database)
+    dividend_cash_true = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est)
+
+    if price_buyin is not None:
+        if dividend_cash_true is None:
+            dividend_cash_true = 0
+
+        price_buyin_hold_1y = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
+
+        dividend_cash = dividend_cash_true
+        for idx in range(1, hold_year):
+            dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est+idx)
+            if dividend_cash_this is None:
+                dividend_cash_this = 0
+            dividend_cash += dividend_cash_this
+
+        if price_buyin_hold_1y is not None:
+            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash)/price_buyin
+        else:
+            return_buyin = None
+    else:
+        price_buyin = None
+        price_buyin_hold_1y = None
+        return_buyin = None
+
+    est_dividend_cash = None
+    est_dividend_cash_yield = None
+
+    return {stockid: dividend_cash_true}, \
+           {stockid: est_dividend_cash}, \
+           {stockid: est_dividend_cash_yield}, \
+           {stockid: price_buyin}, \
+           {stockid: price_buyin_hold_1y}, \
+           {stockid: return_buyin}
+
+
 def processing_return_for_average_5y_cash_dividend(stockid, year_stat, year_est, yield_buyin, hold_year):
     print(format(stockid) + '...')
 
@@ -70,12 +120,21 @@ def processing_return_for_average_5y_cash_dividend(stockid, year_stat, year_est,
     else:
         est_dividend_cash_yield = None
 
-    if price_buyin is not None and est_dividend_cash_yield is not None and dividend_cash_true is not None \
-            and est_dividend_cash_yield>yield_buyin:
-        price_buyin_hold_1y = monthprice.get_PriceHigh(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
+    if price_buyin is not None and est_dividend_cash_yield is not None and est_dividend_cash_yield>yield_buyin:
+        price_buyin_hold_1y = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)  # +1, est:2018 Q4 EPS, 2019/1 get revenues,
+
+        if dividend_cash_true is None:
+            dividend_cash_true = 0
+
+        dividend_cash = dividend_cash_true
+        for idx in range(1, hold_year):
+            dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est+idx)
+            if dividend_cash_this is None:
+                dividend_cash_this = 0
+            dividend_cash += dividend_cash_this
 
         if price_buyin_hold_1y is not None:
-            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash_true)/price_buyin
+            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash)/price_buyin
         else:
             return_buyin = None
     else:
@@ -112,9 +171,20 @@ def processing_return_for_est_cash_dividend_by_netincome_ratio(stockid, year_sta
         est_dividend_cash_yield = None
 
     if price_buyin is not None and est_dividend_cash_yield is not None and est_dividend_cash_yield>yield_buyin:
-        price_buyin_hold_1y = monthprice.get_PriceHigh(stockid, year_est+1+hold_year, 1)
+        price_buyin_hold_1y = monthprice.getPriceClose(stockid, year_est+1+hold_year, 1)
+
+        if dividend_cash_true is None:
+            dividend_cash_true = 0
+
+        dividend_cash = dividend_cash_true
+        for idx in range(1, hold_year):
+            dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est+idx)
+            if dividend_cash_this is None:
+                dividend_cash_this = 0
+            dividend_cash += dividend_cash_this
+
         if price_buyin_hold_1y is not None:
-            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash_true)/price_buyin
+            return_buyin = (price_buyin_hold_1y - price_buyin + dividend_cash)/price_buyin
         else:
             return_buyin = None
     else:
@@ -139,14 +209,15 @@ def dict_to_csv_yeild_return(dict_result, filename_csv, save_path=''):
         for dict_result_ in dict_result:
             dividend_cash_true, est_dividend_cash, est_dividend_cash_yield, price_buyin, price_buyin_hold_1y, return_buyin = dict_result_
             key = list(dividend_cash_true.keys())[0]
-            if dividend_cash_true[key] is not None and \
-                    est_dividend_cash[key] is not None and \
-                est_dividend_cash_yield[key] is not None and \
-                price_buyin[key] is not None and \
+            if price_buyin[key] is not None and \
                 price_buyin_hold_1y[key] is not None and \
                 return_buyin[key] is not None:
                 f.write("%s, %s, %s, %s, %s, %s, %s\n"%(key, dividend_cash_true[key], est_dividend_cash[key], est_dividend_cash_yield[key],
                                                              price_buyin[key], price_buyin_hold_1y[key], return_buyin[key],))
+
+                #dividend_cash_true[key] is not None and \
+                #est_dividend_cash[key] is not None and \
+                #est_dividend_cash_yield[key] is not None and \
 
 
 def bootstrap(data, num_samples, alpha):
@@ -164,7 +235,7 @@ def bootstrap(data, num_samples, alpha):
 
 
 
-def stat_dict_return(dict_result, filename_save, low_bound_pa, save_path=''):
+def stat_dict_return(dict_result, filename_save, num_stock_sel, low_bound_pa, save_path=''):
     # dict to list
     list_return = []
     for dict_result_ in dict_result:
@@ -174,7 +245,7 @@ def stat_dict_return(dict_result, filename_save, low_bound_pa, save_path=''):
             list_return.append(return_check[key])
 
     # stat
-    mean_return, ci_low_return, ci_high_return  = bootstrap(list_return, 5, 0.05)
+    mean_return, ci_low_return, ci_high_return  = bootstrap(list_return, num_stock_sel, 0.05)
 
     # the ratio between +- 10%
     np_return = np.array(list_return)
@@ -184,11 +255,11 @@ def stat_dict_return(dict_result, filename_save, low_bound_pa, save_path=''):
     else:
         ratio_return_pa = None
 
-    print('mean of return with selecting 5 stock: {:6.4f}'.format(mean_return))
-    print('95% confidience interval of return with selecting 5 stock: {:6.4f}~{:6.4f}'.format(ci_low_return,ci_high_return ))
+    print('mean of return with selecting {:2d} stock: {:6.4f}'.format(num_stock_sel, mean_return))
+    print('95% confidience interval of return with selecting {:2d} stocks: {:6.4f}~{:6.4f}'.format(num_stock_sel, ci_low_return,ci_high_return ))
     print('The ratio of return>{:2f}: {:6.4f}'.format(low_bound_pa, ratio_return_pa))
-    dict_return = {'mean of return with selecting 5 stock': mean_return,
-                   '95% confidience interval of return with selecting 5 stock': (ci_low_return, ci_high_return),
+    dict_return = {'mean of return with selecting {:2d} stocks'.format(num_stock_sel, low_bound_pa): mean_return,
+                   '95% confidience interval of return with selecting {:2d} stock'.format(num_stock_sel): (ci_low_return, ci_high_return),
                    'The ratio of return>{:2f}'.format(low_bound_pa): ratio_return_pa}
     with open(os.path.join(save_path, filename_save+'.json'), 'w') as outfile:
         json.dump(dict_return, outfile)
@@ -219,35 +290,43 @@ def main():
             if i_stock is not None:
                 stock_list.append(i_stock)
 
+        # --------------------------------------------------
+        # method 0
+        print('--------------------------------')
+        print('method 0')
+        with Pool(num_cpu) as pool:
+            return_for_roe_15 = pool.starmap(processing_return_for_in_list,
+                                                zip(stock_list, repeat(year_stat), repeat(year_est), repeat(yield_buyin), repeat(hold_year)))
+
+
+        dict_to_csv_yeild_return(return_for_roe_15, 'return_for_roe_15_' + format(year_est) + '.csv',
+                    save_path=save_path)
+        stat_dict_return(return_for_roe_15, 'return_for_roe_15_' + format(year_est),
+                         num_stock_sel=num_stock_sel, low_bound_pa=yield_buyin_target, save_path=save_path)
+
 
         # --------------------------------------------------
         # method 1
-        # yield_buyin > 0.05 and hold_year = 1
-        yield_buyin = 0.05
-        hold_year = 1
         print('--------------------------------')
         print('method 1')
         #'''
         with Pool(num_cpu) as pool:
-            return_1y_for_average_5y_cash_dividend = pool.starmap(processing_return_for_average_5y_cash_dividend,
+            return_for_average_5y_cash_dividend = pool.starmap(processing_return_for_average_5y_cash_dividend,
                                                       zip(stock_list, repeat(year_stat), repeat(year_est), repeat(yield_buyin), repeat(hold_year)))
         #'''
         '''
-        return_1y_for_yield_result = []
+        return_for_yield_result = []
         for i_stock in stock_list:
-            return_1y_for_yield_result.append(processing_return_for_average_5y_cash_dividend(i_stock, year_stat, year_est, yield_buyin, hold_year))
+            return_for_yield_result.append(processing_return_for_average_5y_cash_dividend(i_stock, year_stat, year_est, yield_buyin, hold_year))
         '''
-        dict_to_csv_yeild_return(return_1y_for_average_5y_cash_dividend, 'return_1y_for_average_5y_cash_dividend_' + format(year_est) + '.csv',
+        dict_to_csv_yeild_return(return_for_average_5y_cash_dividend, 'return_for_average_5y_cash_dividend_' + format(year_est) + '.csv',
                     save_path=save_path)
-        stat_dict_return(return_1y_for_average_5y_cash_dividend, 'return_1y_for_average_5y_cash_dividend_' + format(year_est),
-                  low_bound_pa=yield_buyin, save_path=save_path)
+        stat_dict_return(return_for_average_5y_cash_dividend, 'return_for_average_5y_cash_dividend_' + format(year_est),
+                         num_stock_sel=num_stock_sel, low_bound_pa=yield_buyin_target, save_path=save_path)
 
         # --------------------------------------------------
         # method 4
         # yield_buyin > 0.05 and hold_year = 1
-        yield_buyin = 0.0625
-        yield_buyin_target = 0.05
-        hold_year = 1
         print('--------------------------------')
         print('method 4')
 
@@ -263,19 +342,19 @@ def main():
 
         #'''
         with Pool(num_cpu) as pool:
-            return_1y_for_est_cash_dividend_by_netincome_ratio_result = pool.starmap(processing_return_for_est_cash_dividend_by_netincome_ratio, zip(stock_free_cash_list, repeat(year_stat), repeat(year_est), repeat(yield_buyin), repeat(hold_year)))
+            return_for_est_cash_dividend_by_netincome_ratio_result = pool.starmap(processing_return_for_est_cash_dividend_by_netincome_ratio, zip(stock_free_cash_list, repeat(year_stat), repeat(year_est), repeat(yield_buyin), repeat(hold_year)))
         #'''
         '''
-        return_1y_for_est_cash_dividend_by_netincome_ratio_result = []
+        return_for_est_cash_dividend_by_netincome_ratio_result = []
         for i_stock in stock_list:
-            return_1y_for_est_cash_dividend_by_netincome_ratio_result.append(processing_return_for_est_cash_dividend_by_netincome_ratio(i_stock, year_stat, year_est, yield_buyin, hold_year))
+            return_for_est_cash_dividend_by_netincome_ratio_result.append(processing_return_for_est_cash_dividend_by_netincome_ratio(i_stock, year_stat, year_est, yield_buyin, hold_year))
         '''
 
 
-        dict_to_csv_yeild_return(return_1y_for_est_cash_dividend_by_netincome_ratio_result, 'return_1y_for_est_cash_dividend_by_netincome_ratio_' + format(year_est) + '.csv',
+        dict_to_csv_yeild_return(return_for_est_cash_dividend_by_netincome_ratio_result, 'return_for_est_cash_dividend_by_netincome_ratio_' + format(year_est) + '.csv',
                     save_path=save_path)
-        stat_dict_return(return_1y_for_est_cash_dividend_by_netincome_ratio_result, 'return_1y_for_est_cash_dividend_by_netincome_ratio_' + format(year_est),
-                  low_bound_pa=yield_buyin_target, save_path=save_path)
+        stat_dict_return(return_for_est_cash_dividend_by_netincome_ratio_result, 'return_for_est_cash_dividend_by_netincome_ratio_' + format(year_est),
+                         num_stock_sel=num_stock_sel, low_bound_pa=yield_buyin_target, save_path=save_path)
 
 
 
