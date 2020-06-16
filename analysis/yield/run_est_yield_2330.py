@@ -8,16 +8,19 @@ from findbillion.core.class_findbillion_database import class_findbillion_databa
 from findbillion.models.class_fs_dividendpolicy import class_fs_dividendpolicy
 
 dataset_path = r'D:\python\data_set\findbillion_csv\20200512'
-
+stockid = 2330
+year_est = 2018
+year_stat = 2017
 
 def main():
-    stockid = 2330
-    year_est = 2018
-    year_stat = 2017
-
     findbillion_database = class_findbillion_database(dataset_path)
+
+    #
     est_eps = class_est_eps(findbillion_database)
     est_yield = class_est_yield(findbillion_database)
+
+    #-----------------------------------------
+    # ground truth of dividend_cash
     fs_dividendpolicy = class_fs_dividendpolicy(findbillion_database)
     dividend_cash = fs_dividendpolicy.get_Dividend_Cash(stockid, year_est)
 

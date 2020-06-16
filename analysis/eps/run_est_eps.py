@@ -33,11 +33,15 @@ findbillion_database = class_findbillion_database(dataset_path)
 def func_est_eps(stockid, year_est):
     quarter_est = 4
 
+    # ground true
     financial_ratio = class_financial_ratio(findbillion_database)
-    est_eps = class_est_eps(findbillion_database)
     eps_true = financial_ratio.get_eps_last_4q(stockid, year_est, quarter_est)
+
+    # estimate
+    est_eps = class_est_eps(findbillion_database)
     eps_pred = est_eps.est_last_4q_eps_by_netincome_ratio(stockid, year_est, quarter_est)
 
+    # error
     if eps_true is None or eps_pred is None:
         err_percentage = None
     elif eps_true != 0:
@@ -81,6 +85,7 @@ def main():
         os.makedirs(save_path)
 
     #------------------------------------------------
+    # list all stock
     stockinfo = class_stockinfo(findbillion_database)
     stock_list = stockinfo.get_stock_list()
 
@@ -95,11 +100,12 @@ def main():
         break_pt = 1
     '''
 
+    #============================================
     for year_est in year_est_list:
         print('=======================================')
         print('Year: ' + format(year_est))
         #--------------------------------------------------
-        # method 1
+        # method 1: estimate all stock
         print('--------------------------------')
         print('method 1')
         with Pool(num_cpu) as pool:
@@ -111,7 +117,7 @@ def main():
 
 
         # --------------------------------------------------
-        # method 2
+        # method 2: estimate the ROE>15% stock
         print('--------------------------------')
         print('method 2')
         with Pool(num_cpu) as pool:

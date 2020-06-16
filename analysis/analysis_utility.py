@@ -67,8 +67,9 @@ def cal_retrun(stockid, price_buy, price_sell, year_start, year_hold, fs_dividen
         dividend_cash_this = fs_dividendpolicy.get_Dividend_Cash(stockid, year_start + idx)
         dividend_stoch_this = fs_dividendpolicy.get_Dividend_Stock(stockid, year_start + idx)
 
-        dividend_cash += dividend_cash_this
-        dividend_stoch *= (1 + dividend_stoch_this / 10)
+        if dividend_cash_this is not None:
+            dividend_cash += dividend_cash_this
+            dividend_stoch *= (1 + dividend_stoch_this / 10)
 
     if price_buy is not None and price_sell is not None:
         return_buyin = (price_sell - price_buy + dividend_cash) / price_buy * dividend_stoch

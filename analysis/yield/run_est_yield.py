@@ -25,7 +25,7 @@ debug = 0
 year_stat_list = [2012, 2013, 2014, 2015, 2016, 2017]  # 2012~2017
 year_est_list =  [2013, 2014, 2015, 2016, 2017, 2018]  # 2013~2018
 
-findbillion_database = class_findbillion_database(dataset_path)
+
 
 
 def processing_roe_15pa(stockid, year_stat):
@@ -131,6 +131,8 @@ def  processing_est_cash_dividend_by_netincome_ratio(stockid, year_stat, year_es
 
 
 def main():
+    findbillion_database = class_findbillion_database(dataset_path)
+
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
@@ -163,7 +165,7 @@ def main():
         '''
 
         # --------------------------------------------------
-        # method 1
+        # method 1: average last 5 year cash dividend
         print('--------------------------------')
         print('method 1')
         with Pool(num_cpu) as pool:
@@ -173,7 +175,7 @@ def main():
         dict_to_csv(est_cash_dividend_result, 'est_cash_dividend_average_'+format(year_est)+'.csv', save_path=save_path)
         stat_dict(est_cash_dividend_result, 'est_cash_dividend_average_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
         # --------------------------------------------------
-        # method 2
+        # method 2: estimate eps and average last 5 year cash dividend payout ratio
         print('--------------------------------')
         print('method 2')
         with Pool(num_cpu) as pool:
@@ -183,7 +185,7 @@ def main():
         stat_dict(est_cash_dividend_average_dividend_payout_ratio, 'est_cash_dividend_average_dividend_payout_ratio_'+format(year_est), up_bound_pa=20, low_bound_pa=-20, save_path=save_path)
 
         # --------------------------------------------------
-        # method 3
+        # method 3: estimate eps and estimate dividend payout ratio using linear regression
         print('--------------------------------')
         print('method 3')
         with Pool(num_cpu) as pool:
@@ -194,9 +196,9 @@ def main():
 
 
         # --------------------------------------------------
-        # method 4
+        # method 4: method 3 + free cash flow >0
         print('method 4')
-        print('search free cash>0 ...')
+        print('search free cash flow >0 ...')
         with Pool(num_cpu) as pool:
             stock_free_cash_list = pool.starmap(processing_free_cash_positive, zip(stock_list, repeat(year_stat) ))
 
@@ -220,7 +222,7 @@ def main():
 
 
         # --------------------------------------------------
-        # method 5
+        # method 5: method 4 + opetating activities ratio >0.5 (not improved)
         print('method 5')
         print('search opetating activities ratio >0.5 ...')
         #with Pool(num_cpu) as pool:
