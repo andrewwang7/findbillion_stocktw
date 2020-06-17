@@ -11,7 +11,15 @@ findbillion想利用統計和AI等方法估算目標價, 以價值型分析為�
 ![](./doc/performance/20200522_performance_1.jpg) 
 ![](./doc/performance/20200522_performance_2.jpg) 
 ![](./doc/performance/20200522_performance_3.jpg) <br>
- 
+ <br>
+
+2020/06/17相隔約一個月之後, 累積報酬來到約171%, 一個月報酬率多20%, 完全是複利的效果所致 <br>
+![](./doc/performance/20200617_performance_1.jpg) 
+![](./doc/performance/20200617_performance_2.jpg) 
+![](./doc/performance/20200617_performance_3.jpg) <br>
+ <br>
+ <br>
+  
 ## 程式碼採用平台如下: <br>
 Python 3.6.10 以上 <br>
  <br>
