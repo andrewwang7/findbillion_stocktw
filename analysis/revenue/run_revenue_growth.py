@@ -28,7 +28,7 @@ en_plot = 1
 
 
 def main():
-    year_start = 2019 - check_year  # 2017/1~2019/12
+    year_start = year_end - check_year  # 2017/1~2019/12
     month_start = 12
     if month_start == 12:
         year_start += 1

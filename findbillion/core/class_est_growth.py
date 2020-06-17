@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
-
+import math
 
 sys.path.append('../..')
 from findbillion.models.class_fs_revenues_month import class_fs_revenues_month
@@ -28,7 +28,7 @@ class class_est_growth:
         while year_check<year_end or (year_check==year_end and month_check<=month_end):
             revenues_month = self.fs_revenues_month.get_revenue(stockid, year_check, month_check)
 
-            if revenues_list is not None:
+            if revenues_month is not None and not math.isnan(revenues_month)   :
                 revenues_list.append(revenues_month)
 
             month_check += 1
@@ -42,6 +42,10 @@ class class_est_growth:
 
     def __cal_second_order_regression(self, revenues_list, en_plot=0):
         num_x = len(revenues_list)
+
+        if num_x<12:
+            return None, None
+
         x_np = np.linspace(0,  num_x-1, num_x).reshape(num_x, 1)
         revenues_np = np.array(revenues_list).reshape(num_x, 1)  #  [n_samples, n_features]
 
